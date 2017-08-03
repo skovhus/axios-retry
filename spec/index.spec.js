@@ -23,7 +23,7 @@ function setupResponses(client, responses) {
   configureResponse();
 }
 
-describe('axiosRetry(axios, { retries, retryCondition })', () => {
+describe('axiosRetry(axios, { retries, retryCondition, delay })', () => {
   afterEach(() => {
     nock.cleanAll();
     nock.enableNetConnect();

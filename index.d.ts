@@ -15,6 +15,13 @@ export interface IAxiosRetryConfig {
    * @type {Function}
    */
   retryCondition?: (error: axios.AxiosError) => boolean
+  /**
+   * The delay between retries, it can be a simple number or function which recieves attempt count as argument ar returns delay as a nummber
+   * default: 0
+   * 
+   * @type {Function|Number}
+   */
+  delay?: (attempt: number) => number | number
 }
 
 export interface IAxiosRetry {
