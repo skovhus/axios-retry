@@ -86,6 +86,7 @@ function fixConfig(axios, config) {
  * @param {Object} [defaultOptions]
  * @param {number} [defaultOptions.retries=3] Number of retries
  * @param {number} [defaultOptions.retryCondition=isNetworkError] Number of retries
+ * @param {number} [defaultOptions.delay=0] Delay between retries
  */
 export default function axiosRetry(axios, defaultOptions) {
   axios.interceptors.response.use(null, error => {
@@ -98,7 +99,8 @@ export default function axiosRetry(axios, defaultOptions) {
 
     const {
       retries = 3,
-      retryCondition = isNetworkError
+      retryCondition = isNetworkError,
+      delay = 0
     } = getRequestOptions(config, defaultOptions);
 
     const currentState = getCurrentState(config);
@@ -109,19 +111,24 @@ export default function axiosRetry(axios, defaultOptions) {
       && isRetryAllowed(error);
 
     if (shouldRetry) {
-      currentState.retryCount++;
+      return new Promise(resolve => {
+        setTimeout(resolve, delay);
+      })
+      .then(() => {
+        currentState.retryCount++;
 
-      // Axios fails merging this configuration to the default configuration because it has an issue
-      // with circular structures: https://github.com/mzabriskie/axios/issues/370
-      fixConfig(axios, config);
+        // Axios fails merging this configuration to the default configuration because it has
+        // an issue with circular structures: https://github.com/mzabriskie/axios/issues/370
+        fixConfig(axios, config);
 
-      const now = Date.now();
-      if (config.timeout && currentState.lastRequestTime) {
-        config.timeout -= now - currentState.lastRequestTime;
-      }
-      currentState.lastRequestTime = now;
+        const now = Date.now();
+        if (config.timeout && currentState.lastRequestTime) {
+          config.timeout -= now - currentState.lastRequestTime;
+        }
+        currentState.lastRequestTime = now;
 
-      return axios(config);
+        return axios(config);
+      });
     }
 
     return Promise.reject(error);
